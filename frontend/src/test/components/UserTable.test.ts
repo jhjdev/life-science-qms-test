@@ -259,8 +259,9 @@ describe('UserTable', () => {
     const janeRow = Array.from(container.querySelectorAll('tbody tr')).find(row => row.textContent?.includes('Jane Smith'));
     expect(janeRow).toBeTruthy();
     // Click edit button within Jane Smith's row
-    const editButton = janeRow?.querySelector('.edit-button');
-    expect(editButton).toBeTruthy();
+    const editButtonHost = janeRow?.querySelector('.edit-button') as HTMLElement | null;
+    expect(editButtonHost).toBeTruthy();
+    const editButton = editButtonHost?.querySelector('button') || editButtonHost;
     await fireEvent.click(editButton!);
     await tick();
 
@@ -290,8 +291,9 @@ describe('UserTable', () => {
     const janeRow = Array.from(container.querySelectorAll('tbody tr')).find(row => row.textContent?.includes('Jane Smith'));
     expect(janeRow).toBeTruthy();
     // Click edit button within Jane Smith's row
-    const editButton = janeRow?.querySelector('.edit-button');
-    expect(editButton).toBeTruthy();
+    const editButtonHost = janeRow?.querySelector('.edit-button') as HTMLElement | null;
+    expect(editButtonHost).toBeTruthy();
+    const editButton = editButtonHost?.querySelector('button') || editButtonHost;
     await fireEvent.click(editButton!);
     await tick();
 
@@ -307,7 +309,8 @@ describe('UserTable', () => {
     await tick();
 
     // Try to find the save button in the same row as the edit form
-    let saveButton = janeRow?.querySelector('.edit-button');
+    let saveButtonHost = janeRow?.querySelector('.edit-button') as HTMLElement | null;
+    let saveButton = saveButtonHost?.querySelector('button') || saveButtonHost;
     if (!saveButton) {
       // eslint-disable-next-line no-console
       console.log('Row HTML:', janeRow?.outerHTML);
@@ -343,8 +346,9 @@ describe('UserTable', () => {
     const janeRow = Array.from(container.querySelectorAll('tbody tr')).find(row => row.textContent?.includes('Jane Smith'));
     expect(janeRow).toBeTruthy();
     // Click delete button within Jane Smith's row
-    const deleteButton = janeRow?.querySelector('.delete-button');
-    expect(deleteButton).toBeTruthy();
+    const deleteButtonHost = janeRow?.querySelector('.delete-button') as HTMLElement | null;
+    expect(deleteButtonHost).toBeTruthy();
+    const deleteButton = deleteButtonHost?.querySelector('button') || deleteButtonHost;
     await fireEvent.click(deleteButton!);
     await tick();
 
