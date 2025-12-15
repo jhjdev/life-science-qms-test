@@ -20,7 +20,7 @@ services:
 
   # Backend API service
   node:
-    image: node:20.11.1-alpine
+    image: node:20.19.0-alpine
     ports:
       - 3000:3000
     volumes:
@@ -57,7 +57,7 @@ services:
 
   # Backend test service
   node-test:
-    image: node:20.11.1-alpine
+    image: node:20.19.0-alpine
     volumes:
       - ./node:/app
       - /app/node_modules
@@ -111,7 +111,7 @@ services:
 
   # Frontend service
   frontend:
-    image: node:20.11.1-alpine
+    image: node:20.19.0-alpine
     ports:
       - 5173:5173
     volumes:
@@ -139,7 +139,7 @@ services:
 
   # Frontend test service
   frontend-test:
-    image: node:20.11.1-alpine
+    image: node:20.19.0-alpine
     working_dir: /app
     command: sh -c "npm install --legacy-peer-deps && npm test"
     volumes:
