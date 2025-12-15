@@ -10,6 +10,10 @@ const browserGlobals = {
 	document: 'readonly',
 	console: 'readonly',
 	fetch: 'readonly',
+	Element: 'readonly',
+	Node: 'readonly',
+	EventTarget: 'readonly',
+	MouseEvent: 'readonly',
 	HTMLElement: 'readonly',
 	HTMLDivElement: 'readonly',
 	HTMLInputElement: 'readonly',
@@ -21,6 +25,9 @@ const browserGlobals = {
 	AbortController: 'readonly',
 	Blob: 'readonly',
 	URL: 'readonly',
+	Request: 'readonly',
+	Response: 'readonly',
+	Headers: 'readonly',
 	setTimeout: 'readonly',
 	clearTimeout: 'readonly',
 	setInterval: 'readonly',
@@ -80,6 +87,7 @@ export default [
 		},
 		plugins: {
 			svelte: sveltePlugin,
+			'@typescript-eslint': tsPlugin,
 		},
 		rules: {
 			...sveltePlugin.configs.recommended.rules,
@@ -93,6 +101,18 @@ export default [
 			'@typescript-eslint/no-explicit-any': 'off',
 			'@typescript-eslint/no-unused-vars': 'off',
 			'no-unused-vars': 'off',
+		},
+	},
+	{
+		files: ['src/test/**/*.{ts,js,svelte}', 'src/test/mocks/**/*.{ts,js,svelte}'],
+		linterOptions: {
+			reportUnusedDisableDirectives: 'off',
+		},
+		rules: {
+			'@typescript-eslint/no-explicit-any': 'off',
+			'@typescript-eslint/no-unused-vars': 'off',
+			'no-unused-vars': 'off',
+			'no-console': 'off',
 		},
 	},
 	prettier,

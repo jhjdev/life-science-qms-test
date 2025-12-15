@@ -117,7 +117,8 @@ describe('TreeNode', () => {
       }
     });
 
-    const editButton = getByTestId('edit-button');
+    const editButtonHost = getByTestId('edit-button');
+    const editButton = editButtonHost.querySelector('button') || editButtonHost;
     await fireEvent.click(editButton);
     expect(mockHandleEdit).toHaveBeenCalledWith(mockGroup);
   });
@@ -141,7 +142,8 @@ describe('TreeNode', () => {
       }
     });
 
-    const deleteButton = getByTestId('delete-button');
+    const deleteButtonHost = getByTestId('delete-button');
+    const deleteButton = deleteButtonHost.querySelector('button') || deleteButtonHost;
     await fireEvent.click(deleteButton);
     expect(mockHandleDelete).toHaveBeenCalledWith(mockGroup);
   });
@@ -165,7 +167,8 @@ describe('TreeNode', () => {
       }
     });
 
-    const expandButton = getByTestId('toggle-expand-button');
+    const expandButtonHost = getByTestId('toggle-expand-button');
+    const expandButton = expandButtonHost.querySelector('button') || expandButtonHost;
     await fireEvent.click(expandButton);
     expect(mockToggleExpand).toHaveBeenCalledWith(mockGroup.id);
   });

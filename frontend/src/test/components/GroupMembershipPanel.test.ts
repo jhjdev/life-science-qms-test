@@ -173,9 +173,10 @@ describe('GroupMembershipPanel', () => {
     await fireEvent.change(memberSelect, { target: { value: '1' } });
     
     // Find and click check button
-    const checkButton = getByTestId('check-membership-button');
-    expect(checkButton).toBeTruthy();
-    
+    const checkButtonHost = getByTestId('check-membership-button');
+    expect(checkButtonHost).toBeTruthy();
+
+    const checkButton = checkButtonHost.querySelector('button') || checkButtonHost;
     await fireEvent.click(checkButton);
     
     // Verify fetch was called correctly
@@ -208,9 +209,10 @@ describe('GroupMembershipPanel', () => {
     await fireEvent.change(groupSelect, { target: { value: '1' } });
     
     // Find and click get all members button
-    const getAllButton = getByTestId('get-all-members-button');
-    expect(getAllButton).toBeTruthy();
-    
+    const getAllButtonHost = getByTestId('get-all-members-button');
+    expect(getAllButtonHost).toBeTruthy();
+
+    const getAllButton = getAllButtonHost.querySelector('button') || getAllButtonHost;
     await fireEvent.click(getAllButton);
     
     // Verify fetch was called with the correct URL
