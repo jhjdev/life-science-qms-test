@@ -5,6 +5,8 @@ import logger from 'morgan';
 import cors from 'cors';
 import { fileURLToPath } from 'url';
 import createError from 'http-errors';
+import helmet from 'helmet';
+import csurf from 'csurf';
 import { setupSwagger } from './swagger-setup.js';
 import { initializeDatabase } from './utils/db-init.js';
 
@@ -19,6 +21,10 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
+// Security middleware
+app.use(helmet());
+app.disable('x-powered-by');
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
@@ -30,11 +36,22 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(cors());
 
+// CSRF Protection
+const csrfProtection = csurf({ cookie: true });
+
 // Initialize Swagger documentation
 setupSwagger(app);
 
 // Initialize database and seed test data
 initializeDatabase().catch(console.error);
+
+// Route to get CSRF token (public, no CSRF protection needed)
+app.get('/api/csrf-token', (req, res) => {
+  res.json({ csrfToken: req.csrfToken ? req.csrfToken() : null });
+});
+
+// Apply CSRF protection to all routes
+app.use(csrfProtection);
 
 app.use('/', indexRouter);
 app.use('/api/users', usersRouter);
@@ -44,7 +61,7 @@ app.use('/api/groups', groupRouter);
 app.use(function (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction
+  next: express.NextFunction,
 ) {
   next(createError(404));
 });
@@ -54,7 +71,7 @@ app.use(function (
   err: any,
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction
+  next: express.NextFunction,
 ) {
   // set locals, only providing error in development
   res.locals.message = err.message;

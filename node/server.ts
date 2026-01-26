@@ -5,6 +5,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import helmet from 'helmet';
 import sql from './utils/sql.js';
 import { setupSwagger } from './swagger-setup.js';
 import { initializeDatabase } from './utils/db-init.js';
@@ -13,6 +14,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app: Express = express();
+
+// Security middleware
+app.use(helmet());
+app.disable('x-powered-by');
 
 // CORS configuration
 app.use(
@@ -24,7 +29,7 @@ app.use(
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
-  })
+  }),
 );
 
 app.use(express.json());
@@ -59,7 +64,7 @@ interface HealthCheck {
 // Health check endpoint with comprehensive metrics
 app.get('/health', async (_req: Request, res: Response) => {
   const startTime = Date.now();
-  
+
   try {
     // Test database connection and get metrics
     const dbStartTime = Date.now();
@@ -69,7 +74,7 @@ app.get('/health', async (_req: Request, res: Response) => {
       version() as database_version
     `;
     const dbResponseTime = Date.now() - dbStartTime;
-    
+
     // Get database table statistics
     const tableStats = await sql`
       SELECT 
@@ -81,17 +86,18 @@ app.get('/health', async (_req: Request, res: Response) => {
       FROM pg_stat_user_tables
       ORDER BY schemaname, tablename
     `;
-    
+
     // Get user and group counts
     const userCount = await sql`SELECT COUNT(*) as count FROM users`;
     const groupCount = await sql`SELECT COUNT(*) as count FROM groups`;
-    const membershipCount = await sql`SELECT COUNT(*) as count FROM group_members`;
-    
+    const membershipCount =
+      await sql`SELECT COUNT(*) as count FROM group_members`;
+
     // System metrics
     const memoryUsage = process.memoryUsage();
     const cpuUsage = process.cpuUsage();
     const uptime = process.uptime();
-    
+
     // Environment info
     const environmentInfo = {
       nodeVersion: process.version,
@@ -99,11 +105,11 @@ app.get('/health', async (_req: Request, res: Response) => {
       arch: process.arch,
       environment: process.env.NODE_ENV || 'development',
       pid: process.pid,
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     };
-    
+
     const responseTime = Date.now() - startTime;
-    
+
     res.json({
       status: 'healthy',
       timestamp: new Date().toISOString(),
@@ -119,42 +125,56 @@ app.get('/health', async (_req: Request, res: Response) => {
             heapTotal: formatBytes(memoryUsage.heapTotal),
             heapUsed: formatBytes(memoryUsage.heapUsed),
             external: formatBytes(memoryUsage.external),
-            heapUsedPercentage: Math.round((memoryUsage.heapUsed / memoryUsage.heapTotal) * 100)
+            heapUsedPercentage: Math.round(
+              (memoryUsage.heapUsed / memoryUsage.heapTotal) * 100,
+            ),
           },
           cpu: {
             user: Math.round(cpuUsage.user / 1000), // Convert to milliseconds
-            system: Math.round(cpuUsage.system / 1000)
-          }
+            system: Math.round(cpuUsage.system / 1000),
+          },
         },
         database: {
           status: 'healthy',
           responseTime: `${dbResponseTime}ms`,
           name: dbResult[0].database_name,
-          version: dbResult[0].database_version?.split(' ')[0] + ' ' + dbResult[0].database_version?.split(' ')[1],
+          version:
+            dbResult[0].database_version?.split(' ')[0] +
+            ' ' +
+            dbResult[0].database_version?.split(' ')[1],
           connectionCount: parseInt(dbResult[0].connection_count),
           statistics: {
             tables: tableStats.length,
-            totalInserts: tableStats.reduce((sum, table) => sum + parseInt(table.inserts || 0), 0),
-            totalUpdates: tableStats.reduce((sum, table) => sum + parseInt(table.updates || 0), 0),
-            totalDeletes: tableStats.reduce((sum, table) => sum + parseInt(table.deletes || 0), 0)
-          }
-        }
+            totalInserts: tableStats.reduce(
+              (sum, table) => sum + parseInt(table.inserts || 0),
+              0,
+            ),
+            totalUpdates: tableStats.reduce(
+              (sum, table) => sum + parseInt(table.updates || 0),
+              0,
+            ),
+            totalDeletes: tableStats.reduce(
+              (sum, table) => sum + parseInt(table.deletes || 0),
+              0,
+            ),
+          },
+        },
       },
       data: {
         users: parseInt(userCount[0].count),
         groups: parseInt(groupCount[0].count),
-        memberships: parseInt(membershipCount[0].count)
+        memberships: parseInt(membershipCount[0].count),
       },
       environment: environmentInfo,
       version: {
         api: process.env.npm_package_version || '1.0.0',
-        node: process.version
-      }
+        node: process.version,
+      },
     });
   } catch (error) {
     console.error('Health check failed:', error);
     const responseTime = Date.now() - startTime;
-    
+
     res.status(500).json({
       status: 'unhealthy',
       timestamp: new Date().toISOString(),
@@ -168,10 +188,11 @@ app.get('/health', async (_req: Request, res: Response) => {
         },
         database: {
           status: 'unhealthy',
-          error: error instanceof Error ? error.message : 'Unknown database error',
+          error:
+            error instanceof Error ? error.message : 'Unknown database error',
         },
       },
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -182,7 +203,7 @@ function formatUptime(uptimeSeconds: number): string {
   const hours = Math.floor((uptimeSeconds % 86400) / 3600);
   const minutes = Math.floor((uptimeSeconds % 3600) / 60);
   const seconds = Math.floor(uptimeSeconds % 60);
-  
+
   if (days > 0) {
     return `${days}d ${hours}h ${minutes}m ${seconds}s`;
   } else if (hours > 0) {
@@ -199,7 +220,7 @@ function formatBytes(bytes: number): string {
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
   if (bytes === 0) return '0 Bytes';
   const i = Math.floor(Math.log(bytes) / Math.log(1024));
-  return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+  return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + ' ' + sizes[i];
 }
 
 // Import routes
@@ -228,6 +249,6 @@ initializeDatabase().catch(console.error);
 server.listen(PORT, () => {
   console.log(`Server is running on https://localhost:${PORT}`);
   console.log(
-    `Swagger documentation available at https://localhost:${PORT}/api-docs`
+    `Swagger documentation available at https://localhost:${PORT}/api-docs`,
   );
 });
