@@ -7,7 +7,6 @@ import {
   RequestHandler,
 } from 'express';
 import { Row } from 'postgres';
-import type { Sql } from 'postgres';
 const router: Router = express.Router();
 
 import sql from '../utils/sql.js';
@@ -87,9 +86,9 @@ router.post('/', (async (req: Request, res: Response) => {
     }
 
     // Start a transaction
-    const result = await sql.begin(async (sql: Sql) => {
+    const result = await sql.begin(async (tx: any) => {
       // Create the new group
-      const [newGroup] = await sql`
+      const [newGroup] = await tx`
         INSERT INTO groups (name, parent_id, level)
         VALUES (${name}, ${parent_id ?? null}, ${level})
         RETURNING id, name, parent_id, level
@@ -97,7 +96,7 @@ router.post('/', (async (req: Request, res: Response) => {
 
       // If this is a child group, add it to the group_members table
       if (parent_id !== undefined && parent_id !== null) {
-        await sql`
+        await tx`
           INSERT INTO group_members (group_id, member_id, member_type)
           VALUES (${parent_id}, ${newGroup.id}, 'group')
         `;

@@ -6,7 +6,7 @@ import cors from 'cors';
 import { fileURLToPath } from 'url';
 import createError from 'http-errors';
 import helmet from 'helmet';
-import csurf from 'csurf';
+import { csrfProtection } from './middleware/csrf.js';
 import { setupSwagger } from './swagger-setup.js';
 import { initializeDatabase } from './utils/db-init.js';
 
@@ -36,22 +36,19 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(cors());
 
-// CSRF Protection
-const csrfProtection = csurf({ cookie: true });
-
 // Initialize Swagger documentation
 setupSwagger(app);
 
 // Initialize database and seed test data
 initializeDatabase().catch(console.error);
 
-// Route to get CSRF token (public, no CSRF protection needed)
-app.get('/api/csrf-token', (req, res) => {
-  res.json({ csrfToken: req.csrfToken ? req.csrfToken() : null });
-});
-
-// Apply CSRF protection to all routes
+// CSRF Protection (double-submit cookie pattern)
 app.use(csrfProtection);
+
+// Route to get CSRF token
+app.get('/api/csrf-token', (req, res) => {
+  res.json({ csrfToken: (req as any).csrfToken() });
+});
 
 app.use('/', indexRouter);
 app.use('/api/users', usersRouter);
