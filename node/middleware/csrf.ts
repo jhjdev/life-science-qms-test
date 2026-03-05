@@ -24,11 +24,14 @@ export function csrfProtection(
   if (!token) {
     token = randomUUID();
     res.cookie(CSRF_COOKIE, token, {
-      httpOnly: false, // Client JS needs to read this
+      httpOnly: true,
       sameSite: 'strict',
       secure: process.env.NODE_ENV === 'production',
     });
   }
+
+  // Expose token via response header so clients can read it
+  res.setHeader('X-CSRF-Token', token);
 
   // Attach helper so routes can retrieve the current token
   (req as any).csrfToken = () => token;
